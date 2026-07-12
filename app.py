@@ -1,26 +1,34 @@
-# app for pdf-merge and image-to-pdf with minimalistic theme
+# app for pdf-merge and image-to-pdf with animated reactive background
 import streamlit as st
 import pikepdf
 from PIL import Image
 
-# --- Page setup ---
 st.set_page_config(page_title="PDF Worker", page_icon="📄", layout="centered")
 
-# --- Custom minimalistic style ---
+# --- Animated gradient + gentle mouse movement ---
 st.markdown(
     """
     <style>
-    /* Overall background and font */
-    body {
-        background-color: #fafafa;
-        font-family: 'Inter', sans-serif;
+    @keyframes gradientShift {
+        0% {background-position: 0% 50%;}
+        50% {background-position: 100% 50%;}
+        100% {background-position: 0% 50%;}
     }
-    /* Headings */
-    h1, h2, h3 {
+
+    body {
+        background: linear-gradient(-45deg, #f8f9fa, #e9ecef, #f1f3f5, #dee2e6);
+        background-size: 400% 400%;
+        animation: gradientShift 20s ease infinite;
+        font-family: 'Inter', sans-serif;
         color: #333333;
+        transition: background-position 0.2s ease;
+    }
+
+    h1, h2 {
+        color: #222222;
         font-weight: 600;
     }
-    /* Buttons */
+
     .stButton>button {
         background-color: #333333;
         color: white;
@@ -31,18 +39,22 @@ st.markdown(
     .stButton>button:hover {
         background-color: #555555;
     }
-    /* File uploader */
+
     .stFileUploader {
         border: 1px solid #dddddd;
         border-radius: 6px;
         padding: 0.5em;
         background-color: #ffffff;
     }
-    /* Footer */
-    footer {
-        visibility: hidden;
-    }
     </style>
+
+    <script>
+    document.addEventListener('mousemove', function(e) {
+        const x = e.clientX / window.innerWidth;
+        const y = e.clientY / window.innerHeight;
+        document.body.style.backgroundPosition = `${x*100}% ${y*100}%`;
+    });
+    </script>
     """,
     unsafe_allow_html=True
 )
@@ -51,11 +63,7 @@ st.markdown(
 st.title("PDF Worker")
 
 st.header("📄 PDF Merger")
-uploaded_files = st.file_uploader(
-    "Upload PDFs to merge",
-    type="pdf",
-    accept_multiple_files=True
-)
+uploaded_files = st.file_uploader("Upload PDFs to merge", type="pdf", accept_multiple_files=True)
 
 if st.button("Merge PDFs"):
     if uploaded_files:
@@ -70,11 +78,7 @@ if st.button("Merge PDFs"):
         st.warning("Please upload at least one PDF.")
 
 st.header("🖼️ Image to PDF Converter")
-image_files = st.file_uploader(
-    "Upload images to convert",
-    type=["jpg", "jpeg", "png"],
-    accept_multiple_files=True
-)
+image_files = st.file_uploader("Upload images to convert", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
 if st.button("Convert Images to PDF"):
     if image_files:
