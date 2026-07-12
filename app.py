@@ -27,3 +27,12 @@ if st.button("Merge PDFs"):
         )
     else:
         st.warning("Please upload at least one PDF.")
+
+st.markdown(
+    """
+    ---
+    **Developed by [Prabhat Baskota](https://github.com/prabhatbaskota)**  
+    © 2026 | Built with Streamlit and PikePDF
+    """,
+    unsafe_allow_html=True
+)
