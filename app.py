@@ -1,70 +1,15 @@
-# app for pdf-merge and image-to-pdf with animated reactive background
+# app for PDF merge, image-to-PDF, and PDF split/insert
 import streamlit as st
 import pikepdf
 from PIL import Image
 
 st.set_page_config(page_title="PDF Worker", page_icon="📄", layout="centered")
 
-# --- Animated gradient + gentle mouse movement ---
-st.markdown(
-    """
-    <style>
-    @keyframes gradientShift {
-        0% {background-position: 0% 50%;}
-        50% {background-position: 100% 50%;}
-        100% {background-position: 0% 50%;}
-    }
-
-    body {
-        background: linear-gradient(-45deg, #f8f9fa, #e9ecef, #f1f3f5, #dee2e6);
-        background-size: 400% 400%;
-        animation: gradientShift 20s ease infinite;
-        font-family: 'Inter', sans-serif;
-        color: #333333;
-        transition: background-position 0.2s ease;
-    }
-
-    h1, h2 {
-        color: #222222;
-        font-weight: 600;
-    }
-
-    .stButton>button {
-        background-color: #333333;
-        color: white;
-        border-radius: 6px;
-        padding: 0.5em 1.2em;
-        font-weight: 500;
-    }
-    .stButton>button:hover {
-        background-color: #555555;
-    }
-
-    .stFileUploader {
-        border: 1px solid #dddddd;
-        border-radius: 6px;
-        padding: 0.5em;
-        background-color: #ffffff;
-    }
-    </style>
-
-    <script>
-    document.addEventListener('mousemove', function(e) {
-        const x = e.clientX / window.innerWidth;
-        const y = e.clientY / window.innerHeight;
-        document.body.style.backgroundPosition = `${x*100}% ${y*100}%`;
-    });
-    </script>
-    """,
-    unsafe_allow_html=True
-)
-
-# --- App content ---
 st.title("PDF Worker")
 
+# --- PDF Merger ---
 st.header("📄 PDF Merger")
 uploaded_files = st.file_uploader("Upload PDFs to merge", type="pdf", accept_multiple_files=True)
-
 if st.button("Merge PDFs"):
     if uploaded_files:
         merged = pikepdf.Pdf.new()
@@ -77,9 +22,9 @@ if st.button("Merge PDFs"):
     else:
         st.warning("Please upload at least one PDF.")
 
+# --- Image to PDF ---
 st.header("🖼️ Image to PDF Converter")
 image_files = st.file_uploader("Upload images to convert", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
-
 if st.button("Convert Images to PDF"):
     if image_files:
         images = [Image.open(img).convert("RGB") for img in image_files]
@@ -88,6 +33,31 @@ if st.button("Convert Images to PDF"):
         st.download_button("Download PDF", open("images.pdf", "rb"), "images.pdf")
     else:
         st.warning("Please upload at least one image.")
+
+# --- PDF Split & Insert ---
+st.header("✂️ Split & Insert PDF")
+split_pdf = st.file_uploader("Upload a PDF to split", type="pdf")
+insert_pdf = st.file_uploader("Upload another PDF to insert", type="pdf")
+start_page = st.number_input("Start page to split (1-indexed)", min_value=1, step=1)
+end_page = st.number_input("End page to split (inclusive)", min_value=1, step=1)
+
+if st.button("Split and Insert"):
+    if split_pdf and insert_pdf:
+        base = pikepdf.Pdf.open(split_pdf)
+        insert = pikepdf.Pdf.open(insert_pdf)
+        # Split the base PDF
+        part1 = base.pages[:start_page - 1]
+        part2 = base.pages[end_page:]
+        # Create new PDF and insert
+        new_pdf = pikepdf.Pdf.new()
+        new_pdf.pages.extend(part1)
+        new_pdf.pages.extend(insert.pages)
+        new_pdf.pages.extend(part2)
+        new_pdf.save("modified.pdf")
+        st.success("PDF split and insertion completed!")
+        st.download_button("Download modified PDF", open("modified.pdf", "rb"), "modified.pdf")
+    else:
+        st.warning("Please upload both PDFs and specify page range.")
 
 # --- Developer credit ---
 st.markdown(
